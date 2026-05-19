@@ -1132,7 +1132,7 @@ function copyEl(id) {
 async function call(messages, system, maxTokens = 1200) {
   if (!apiKey) { toast('Bitte API-Key eingeben'); throw new Error('no key'); }
   setDotBusy(true);
-  const body = { model: 'claude-sonnet-4-20250514', max_tokens: maxTokens, messages };
+  const body = { model: 'claude-sonnet-4-5', max_tokens: maxTokens, messages };
   if (system) body.system = system;
   const r = await fetch('/api/proxy', {
     method: 'POST',
@@ -1462,8 +1462,6 @@ Nur den verbesserten Text, ohne Kommentar.`;
     const improved = await call([{ role: 'user', content: prompt }]);
     body.className = 'output-body';
     body.textContent = improved;
-
-
   } catch(e) {
     body.className = 'output-body';
     body.textContent = 'Fehler: ' + e.message;
