@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChangeComm — KI-gestützte Change-Kommunikation</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Syne:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Syne', 'Segoe UI', 'Trebuchet MS', sans-serif !important; }
+  .wordmark, .page-title { font-family: 'Playfair Display', Georgia, serif !important; }
+</style>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:      #1C1917;
+  --ink2:     #44403C;
+  --ink3:     #78716C;
+  --ink4:     #A8A29E;
+  --paper:    #FAFAF8;
+  --paper2:   #F5F3EE;
+  --paper3:   #EDE9E0;
+  --line:     #E7E3DA;
+  --line2:    #D6D0C4;
+  --gold:     #B45309;
+  --gold-lt:  #FEF3C7;
+  --gold-md:  #FDE68A;
+  --teal:     #0F766E;
+  --teal-lt:  #CCFBF1;
+  --rose:     #9F1239;
+  --rose-lt:  #FFE4E6;
+  --shadow:   0 1px 3px rgba(28,25,23,0.08), 0 4px 16px rgba(28,25,23,0.06);
+  --shadow-lg:0 8px 32px rgba(28,25,23,0.12), 0 2px 8px rgba(28,25,23,0.06);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ── SIDEBAR + MAIN LAYOUT ── */
+.app {
+  display: flex;
+  min-height: 100vh;
+  align-items: flex-start;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--ink);
+  color: var(--paper);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  width: 260px;
+  min-width: 260px;
+  flex-shrink: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+.sidebar-top {
+  padding: 2rem 1.5rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.wordmark {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--paper);
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.wordmark em {
+  font-style: italic;
+  color: #D97706;
+}
+
+.tagline {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nav {
+  padding: 1rem 0.75rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  border: none;
+  background: none;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.45);
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); }
+.nav-item.active { background: rgba(217,119,6,0.18); color: #FCD34D; }
+
+.nav-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.06);
+  transition: background 0.15s;
+}
+
+.nav-item.active .nav-icon { background: rgba(217,119,6,0.25); }
+
+.nav-label { flex: 1; }
+.nav-sub { font-size: 11px; color: rgba(255,255,255,0.25); font-weight: 400; display: block; margin-top: 1px; }
+.nav-item.active .nav-sub { color: rgba(252,211,77,0.5); }
+
+.sidebar-bottom {
+  padding: 1rem 0.75rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.api-wrap {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.api-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.api-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.api-dot.ok   { background: #34D399; box-shadow: 0 0 6px rgba(52,211,153,0.5); }
+.api-dot.busy { background: #FCD34D; animation: pulse 1s infinite; }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.api-label { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 0.06em; text-transform: uppercase; }
+
+.api-input {
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  font-family: 'Syne', sans-serif;
+  color: rgba(255,255,255,0.7);
+  padding: 0;
+}
+.api-input::placeholder { color: rgba(255,255,255,0.2); }
+
+.api-toggle {
+  background: none; border: none; cursor: pointer;
+  color: rgba(255,255,255,0.3); font-size: 12px; padding: 0;
+  margin-top: 6px; display: block; text-align: right; width: 100%;
+}
+
+/* ── MAIN ── */
+.main {
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.page {
+  display: none;
+  padding: 3rem 3.5rem;
+  max-width: 860px;
+  animation: pageIn 0.25s ease;
+}
+.page.active { display: block; }
+
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PAGE HEADERS ── */
+.page-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+.page-title em { font-style: italic; color: var(--ink2); }
+
+.page-desc {
+  font-size: 14px;
+  color: var(--ink3);
+  max-width: 520px;
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--line);
+  word-break: normal;
+  overflow-wrap: normal;
+  white-space: normal;
+}
+
+/* ── FORM ELEMENTS ── */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-row.tri { grid-template-columns: 1fr 1fr 1fr; }
+.form-row.full { grid-template-columns: 1fr; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+.field-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink3);
+}
+
+select, textarea, input[type="text"] {
+  font-family: 'Syne', sans-serif;
+  font-size: 13.5px;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--line2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%2378716C' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+
+select:focus, textarea:focus, input[type="text"]:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(180,83,9,0.08);
+}
+
+textarea { resize: vertical; min-height: 90px; line-height: 1.65; }
+
+/* ── FORM CARD ── */
+.form-card {
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+/* ── BUTTONS ── */
+.btn-row { display: flex; gap: 10px; margin-top: 4px; }
+
+.btn-primary {
+  flex: 1;
+  padding: 12px 20px;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 9px;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(28,25,23,0.2);
+}
+
+.btn-primary:hover { background: var(--ink2); box-shadow: 0 4px 16px rgba(28,25,23,0.25); }
+.btn-primary:active { transform: scale(0.99); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+  padding: 12px 20px;
+  background: #fff;
+  color: var(--ink2);
+  border: 1.5px solid var(--line2);
+  border-radius: 9px;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.btn-secondary:hover { border-color: var(--ink3); color: var(--ink); background: var(--paper2); }
+.btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-ghost {
+  padding: 7px 14px;
+  background: none;
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-ghost:hover { border-color: var(--ink3); color: var(--ink); }
+
+/* ── OUTPUT AREA ── */
+.output-wrap {
+  display: none;
+  margin-top: 1.5rem;
+}
+
+.output-card {
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.output-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper2);
+}
+
+.output-title { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink3); }
+
+.output-actions { display: flex; gap: 8px; }
+
+.output-body {
+  padding: 1.5rem 1.75rem;
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--ink);
+  white-space: pre-wrap;
+  min-height: 120px;
+}
+
+.output-body.loading { color: var(--ink4); font-style: italic; }
+
+/* ── THEORY BAR ── */
+.theory-bar {
+  border-top: 1px solid var(--line);
+  padding: 1.25rem 1.75rem;
+  background: var(--gold-lt);
+  display: none;
+}
+
+.theory-bar-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.theory-bar-text { font-size: 13px; color: #92400E; line-height: 1.7; }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.03em;
+}
+.badge-gold  { background: var(--gold-lt); color: var(--gold); border: 1px solid var(--gold-md); }
+.badge-teal  { background: var(--teal-lt); color: var(--teal); }
+.badge-rose  { background: var(--rose-lt); color: var(--rose); }
+
+/* ── PLAN PHASES ── */
+.phases-wrap { display: flex; flex-direction: column; gap: 10px; }
+
+.phase-item {
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: border-color 0.2s;
+}
+
+.phase-item:hover { border-color: var(--line2); }
+.phase-item.open  { border-color: var(--gold-md); }
+
+.phase-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  cursor: pointer;
+  background: #fff;
+  transition: background 0.15s;
+}
+.phase-head:hover { background: var(--paper2); }
+
+.phase-num {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--paper3);
+  color: var(--ink2);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.phase-item.open .phase-num { background: var(--gold-lt); color: var(--gold); }
+
+.phase-name { font-size: 14px; font-weight: 500; flex: 1; }
+
+.phase-chevron {
+  color: var(--ink4);
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+.phase-item.open .phase-chevron { transform: rotate(180deg); }
+
+.phase-body {
+  display: none;
+  padding: 0 18px 18px;
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--ink2);
+  white-space: pre-wrap;
+  border-top: 1px solid var(--line);
+  background: var(--paper2);
+  padding-top: 14px;
+}
+
+.phase-item.open .phase-body { display: block; }
+
+/* ── SCORES ── */
+.scores-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.score-tile {
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 1.1rem 1rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.score-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px;
+  line-height: 1;
+  font-weight: 400;
+  margin-bottom: 4px;
+}
+
+.score-lbl { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink4); font-weight: 600; }
+
+/* ── VARIANTS ── */
+.variants-wrap { display: flex; flex-direction: column; gap: 14px; }
+
+.variant-card {
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.variant-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--paper2);
+  border-bottom: 1px solid var(--line);
+}
+
+.variant-body {
+  padding: 1.25rem 1.5rem;
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+/* ── CHAT ── */
+.chat-outer {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 200px);
+  min-height: 480px;
+}
+
+.chat-msgs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line2) transparent;
+}
+
+.chat-msgs::-webkit-scrollbar { width: 4px; }
+.chat-msgs::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 2px; }
+
+.msg { display: flex; gap: 12px; max-width: 78%; }
+.msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+.msg-av {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.msg.user .msg-av { background: var(--ink); color: var(--paper); }
+.msg.ai  .msg-av  { background: var(--gold-lt); color: var(--gold); border: 1.5px solid var(--gold-md); }
+
+.msg-bub {
+  padding: 13px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.msg.user .msg-bub {
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 14px 2px 14px 14px;
+}
+
+.msg.ai .msg-bub {
+  background: #fff;
+  border: 1.5px solid var(--line);
+  color: var(--ink);
+  border-radius: 2px 14px 14px 14px;
+  box-shadow: var(--shadow);
+  white-space: pre-wrap;
+}
+
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.chip {
+  padding: 7px 14px;
+  background: #fff;
+  border: 1.5px solid var(--line2);
+  border-radius: 20px;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.chip:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-lt); }
+
+.chat-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  padding-top: 1rem;
+  border-top: 1.5px solid var(--line);
+}
+
+.chat-ta {
+  flex: 1;
+  background: #fff;
+  border: 1.5px solid var(--line2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  resize: none;
+  min-height: 48px;
+  max-height: 150px;
+  overflow-y: auto;
+  line-height: 1.5;
+  transition: border-color 0.2s;
+}
+.chat-ta:focus { border-color: var(--gold); }
+
+.chat-send-btn {
+  width: 46px; height: 46px;
+  background: var(--ink);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.chat-send-btn:hover { background: var(--ink2); }
+.chat-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.chat-send-btn svg { width: 17px; height: 17px; fill: #fff; }
+
+/* ── HISTORY CHIPS ── */
+.history-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 1.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line2) transparent;
+}
+.history-row::-webkit-scrollbar { height: 3px; }
+.history-row::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 2px; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.2s;
+  pointer-events: none;
+  z-index: 999;
+  box-shadow: var(--shadow-lg);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── LOADING DOTS ── */
+.dots::after {
+  content: '…';
+  animation: dotdot 1.2s infinite;
+}
+@keyframes dotdot {
+  0%  { content: '.'; }
+  33% { content: '..'; }
+  66% { content: '...'; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="wordmark">Change<em>Comm</em></div>
+      <div class="tagline">Change Management · KI-Plattform</div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" onclick="goTo('plan', this)">
+        <div class="nav-icon">🗺</div>
+        <div class="nav-label">
+          Kommunikationsplan
+          <span class="nav-sub">Phasenweiser Gesamtplan</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goTo('text', this)">
+        <div class="nav-icon">✍️</div>
+        <div class="nav-label">
+          Text-Generator
+          <span class="nav-sub">E-Mails, Reden, FAQs</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goTo('analyse', this)">
+        <div class="nav-icon">🔍</div>
+        <div class="nav-label">
+          Analyse & Feedback
+          <span class="nav-sub">Texte bewerten & verbessern</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goTo('chat', this)">
+        <div class="nav-icon">💬</div>
+        <div class="nav-label">
+          KI-Assistent
+          <span class="nav-sub">Strategieberatung im Chat</span>
+        </div>
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="api-wrap">
+        <div class="api-head">
+          <div class="api-dot" id="apiDot"></div>
+          <span class="api-label">Anthropic API</span>
+        </div>
+        <input class="api-input" type="password" id="apiKey" placeholder="sk-ant-api…" oninput="handleKey()" />
+        <button class="api-toggle" onclick="toggleKeyVis()">Anzeigen / Verbergen</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main class="main">
+
+    <!-- ── PAGE 1: PLAN ── -->
+    <div class="page active" id="page-plan">
+      <div class="page-eyebrow">Modul 1</div>
+      <h1 class="page-title">Kommunikations<em>plan</em></h1>
+      <p class="page-desc">Generiere einen vollständigen, phasenweisen Change-Kommunikationsplan – abgestimmt auf dein Unternehmen, dein Vorhaben und das passende theoretische Modell.</p>
+
+      <div class="form-card">
+        <div class="form-row">
+          <div class="field">
+            <label class="field-label">Art der Veränderung</label>
+            <select id="p-type">
+              <option value="Digitale Transformation / Einführung neuer Software">Digitale Transformation</option>
+              <option value="Einführung generativer KI-Tools">KI-Einführung</option>
+              <option value="Organisationsumstrukturierung">Umstrukturierung</option>
+              <option value="Rückkehr ins Büro (Return to Office)">Return to Office</option>
+              <option value="Kulturwandel im Unternehmen">Kulturwandel</option>
+              <option value="Fusion oder Übernahme">Fusion / Übernahme</option>
+              <option value="Agile Transformation">Agile Transformation</option>
+              <option value="Nachhaltigkeitstransformation">Nachhaltigkeit</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Change-Modell</label>
+            <select id="p-model">
+              <option value="Kotters 8-Stufen-Modell">Kotter (8 Stufen)</option>
+              <option value="Lewins Drei-Phasen-Modell (Unfreeze–Change–Refreeze)">Lewin (3 Phasen)</option>
+              <option value="ADKAR-Modell (Awareness, Desire, Knowledge, Ability, Reinforcement)">ADKAR</option>
+              <option value="McKinsey 7-S-Framework">McKinsey 7-S</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row tri">
+          <div class="field">
+            <label class="field-label">Unternehmensgröße</label>
+            <select id="p-size">
+              <option value="kleines Unternehmen unter 50 Mitarbeitenden">Klein (&lt;50)</option>
+              <option value="mittelständisches Unternehmen (50–500 Mitarbeitende)" selected>Mittelstand</option>
+              <option value="Großunternehmen über 500 Mitarbeitende">Groß (&gt;500)</option>
+              <option value="Behörde oder öffentliche Einrichtung">Behörde</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Zeitraum</label>
+            <select id="p-duration">
+              <option value="3 Monate">3 Monate</option>
+              <option value="6 Monate" selected>6 Monate</option>
+              <option value="12 Monate">12 Monate</option>
+              <option value="über 12 Monate">Über 12 Monate</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Erwarteter Widerstand</label>
+            <select id="p-resist">
+              <option value="geringem Widerstand">Gering</option>
+              <option value="moderatem Widerstand" selected>Moderat</option>
+              <option value="starkem Widerstand">Stark</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="field">
+            <label class="field-label">Kontext & Besonderheiten</label>
+            <textarea id="p-context" placeholder="z.B. Internationales Team, hohe Skepsis gegenüber Technologie, starke Unternehmenskultur…"></textarea>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="planBtn" onclick="generatePlan()">Plan erstellen</button>
+          <button class="btn-secondary" onclick="copyAllPlan()">Gesamtplan kopieren</button>
+        </div>
+      </div>
+
+      <div class="output-wrap" id="planOut">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <span class="badge badge-gold" id="planBadge"></span>
+        </div>
+        <div class="phases-wrap" id="phasesWrap"></div>
+      </div>
+    </div>
+
+    <!-- ── PAGE 2: TEXT ── -->
+    <div class="page" id="page-text">
+      <div class="page-eyebrow">Modul 2</div>
+      <h1 class="page-title">Text-<em>Generator</em></h1>
+      <p class="page-desc">Erstelle präzise, zielgruppengerechte Change-Kommunikationstexte – von der CEO-Ansprache bis zum FAQ. Einzelner Text oder direkt drei Varianten im Vergleich.</p>
+
+      <div id="txtHistoryWrap" style="display:none;">
+        <div class="field-label" style="margin-bottom:8px;">Zuletzt erstellt</div>
+        <div class="history-row" id="txtHistoryBar"></div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-row">
+          <div class="field">
+            <label class="field-label">Veränderung</label>
+            <select id="t-type">
+              <option value="Einführung eines neuen ERP-Systems">Neue Software / ERP</option>
+              <option value="Einführung von generativen KI-Tools">KI-Einführung</option>
+              <option value="Organisationsumstrukturierung">Umstrukturierung</option>
+              <option value="Return to Office">Return to Office</option>
+              <option value="Kulturwandel">Kulturwandel</option>
+              <option value="Fusion oder Übernahme">Fusion / Übernahme</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Phase</label>
+            <select id="t-phase">
+              <option value="Ankündigung der Veränderung (Unfreeze)">Ankündigung</option>
+              <option value="Dringlichkeit und Vision kommunizieren">Dringlichkeit / Vision</option>
+              <option value="aktive Umsetzungsphase">Umsetzung</option>
+              <option value="Widerstand und Bedenken begegnen">Widerstand begegnen</option>
+              <option value="Stabilisierung und Verankerung (Refreeze)">Stabilisierung</option>
+              <option value="Abschluss und Erfolgskommunikation">Abschluss</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row tri">
+          <div class="field">
+            <label class="field-label">Format</label>
+            <select id="t-format">
+              <option value="formelle E-Mail">E-Mail</option>
+              <option value="Slack- oder Teams-Nachricht">Slack / Teams</option>
+              <option value="FAQ-Dokument">FAQ</option>
+              <option value="CEO-Ansprache">CEO-Ansprache</option>
+              <option value="Townhall-Präsentationstext">Townhall-Text</option>
+              <option value="interne Pressemitteilung">Pressemitteilung</option>
+              <option value="1:1-Gesprächsleitfaden für Führungskräfte">Gesprächsleitfaden</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Zielgruppe</label>
+            <select id="t-audience">
+              <option value="alle Mitarbeitenden">Alle Mitarbeitenden</option>
+              <option value="Führungskräfte">Führungskräfte</option>
+              <option value="ein spezifisches Team">Ein Team</option>
+              <option value="skeptische Mitarbeitende">Skeptische MA</option>
+              <option value="externe Stakeholder">Externe</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Ton</label>
+            <select id="t-tone">
+              <option value="empathisch und verständnisvoll">Empathisch</option>
+              <option value="motivierend und visionär">Motivierend</option>
+              <option value="sachlich und transparent">Sachlich</option>
+              <option value="direkt und handlungsorientiert">Direkt</option>
+              <option value="beruhigend und stabilisierend">Beruhigend</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label class="field-label">Sprache</label>
+            <select id="t-lang">
+              <option value="Deutsch">Deutsch</option>
+              <option value="Englisch">Englisch</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Länge</label>
+            <select id="t-length">
+              <option value="kurz (ca. 100–150 Wörter)">Kurz (~150 Wörter)</option>
+              <option value="mittel (ca. 200–300 Wörter)" selected>Mittel (~250 Wörter)</option>
+              <option value="ausführlich (ca. 400–500 Wörter)">Ausführlich (~450 Wörter)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="field">
+            <label class="field-label">Zusatzkontext (optional)</label>
+            <textarea id="t-context" placeholder="z.B. Rollout in 3 Wochen · Team von 15 Personen · Hauptbedenken: Jobsicherheit…"></textarea>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="textBtn" onclick="generateText()">Text generieren</button>
+          <button class="btn-secondary" id="varBtn" onclick="generateVariants()">3 Varianten</button>
+        </div>
+      </div>
+
+      <div class="output-wrap" id="textOut">
+        <div class="output-card">
+          <div class="output-topbar">
+            <span class="output-title">Generierter Text</span>
+            <div class="output-actions">
+              <button class="btn-ghost" onclick="copyEl('textBody')">Kopieren</button>
+              <button class="btn-ghost" onclick="saveTxtHistory()">Speichern</button>
+            </div>
+          </div>
+          <div class="output-body loading" id="textBody">Text wird generiert<span class="dots"></span></div>
+          <div class="theory-bar" id="theoryBar">
+            <div class="theory-bar-label">Theoriebezug</div>
+            <div class="theory-bar-text" id="theoryText"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="output-wrap" id="variantsOut">
+        <div class="field-label" style="margin-bottom:12px;">3 Varianten im Vergleich</div>
+        <div class="variants-wrap" id="variantsWrap"></div>
+      </div>
+    </div>
+
+    <!-- ── PAGE 3: ANALYSE ── -->
+    <div class="page" id="page-analyse">
+      <div class="page-eyebrow">Modul 3</div>
+      <h1 class="page-title">Analyse & <em>Feedback</em></h1>
+      <p class="page-desc">Lade einen bestehenden Change-Kommunikationstext hoch und erhalte eine strukturierte Bewertung mit Scores, konkretem Feedback und einer verbesserten Version.</p>
+
+      <div class="form-card">
+        <div class="form-row full">
+          <div class="field">
+            <label class="field-label">Deinen Text hier einfügen</label>
+            <textarea id="a-text" style="min-height:160px;" placeholder="Füge hier deinen Change-Kommunikationstext ein…"></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label class="field-label">Kontext / Ziel</label>
+            <input type="text" id="a-context" placeholder="z.B. Ankündigung Umstrukturierung an alle MA" />
+          </div>
+          <div class="field">
+            <label class="field-label">Analyse-Fokus</label>
+            <select id="a-focus">
+              <option value="allgemeine Qualität und Wirksamkeit">Allgemeine Qualität</option>
+              <option value="Empathie und emotionale Intelligenz">Empathie & Emotion</option>
+              <option value="Klarheit und Verständlichkeit">Klarheit</option>
+              <option value="Theoriebezug zum Change Management">Theoriebezug</option>
+              <option value="Widerstandsminimierung">Widerstandsminimierung</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="analyseBtn" onclick="analyseText()">Analysieren</button>
+          <button class="btn-secondary" id="improveBtn" onclick="improveText()">Text verbessern</button>
+        </div>
+      </div>
+
+      <div class="output-wrap" id="analyseOut">
+        <div class="scores-row" id="scoresRow"></div>
+        <div class="output-card">
+          <div class="output-topbar">
+            <span class="output-title">Detailliertes Feedback</span>
+            <button class="btn-ghost" onclick="copyEl('analyseBody')">Kopieren</button>
+          </div>
+          <div class="output-body loading" id="analyseBody">Analyse wird erstellt<span class="dots"></span></div>
+        </div>
+      </div>
+
+      <div class="output-wrap" id="improveOut">
+        <div class="output-card">
+          <div class="output-topbar">
+            <span class="output-title">Verbesserter Text</span>
+            <button class="btn-ghost" onclick="copyEl('improveBody')">Kopieren</button>
+          </div>
+          <div class="output-body loading" id="improveBody">Text wird verbessert<span class="dots"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE 4: CHAT ── -->
+    <div class="page" id="page-chat">
+      <div class="page-eyebrow">Modul 4</div>
+      <h1 class="page-title">KI-<em>Assistent</em></h1>
+      <p class="page-desc">Dein persönlicher Change-Management-Berater. Diskutiere Strategien, lass Modelle erklären oder entwickle Lösungsansätze für konkrete Herausforderungen.</p>
+
+      <div class="chat-outer">
+        <div class="chat-suggestions" id="chatSugs">
+          <button class="chip" onclick="useSug(this)">Wie gehe ich mit Widerstand um?</button>
+          <button class="chip" onclick="useSug(this)">Welches Change-Modell passt zu mir?</button>
+          <button class="chip" onclick="useSug(this)">Wie kommuniziere ich schlechte Nachrichten?</button>
+          <button class="chip" onclick="useSug(this)">Was sind häufige Fehler im Change?</button>
+          <button class="chip" onclick="useSug(this)">Wie messe ich Change-Erfolg?</button>
+        </div>
+
+        <div class="chat-msgs" id="chatMsgs">
+          <div class="msg ai">
+            <div class="msg-av">CC</div>
+            <div class="msg-bub">Hallo! Ich bin dein ChangeComm-Assistent – spezialisiert auf Change Management, Kommunikationsstrategien und Organisationstransformation. Ich kann Modelle erklären, konkrete Texte vorschlagen oder dir bei schwierigen Führungssituationen helfen. Womit kann ich dir heute helfen?</div>
+          </div>
+        </div>
+
+        <div class="chat-input-row">
+          <textarea class="chat-ta" id="chatIn" placeholder="Frage stellen oder Situation beschreiben…" onkeydown="chatKey(event)" rows="1"></textarea>
+          <button class="chat-send-btn" id="chatSendBtn" onclick="sendChat()">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+let apiKey = '';
+let chatHistory = [];
+let textHistoryArr = [];
+let allPlanText = '';
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  const k = localStorage.getItem('cc_key');
+  if (k) { document.getElementById('apiKey').value = k; apiKey = k; setDot(k); }
+});
+
+function handleKey() {
+  apiKey = document.getElementById('apiKey').value.trim();
+  setDot(apiKey);
+  if (apiKey.startsWith('sk-ant')) localStorage.setItem('cc_key', apiKey);
+}
+
+function toggleKeyVis() {
+  const el = document.getElementById('apiKey');
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function setDot(k) {
+  const d = document.getElementById('apiDot');
+  d.className = 'api-dot' + (k.startsWith('sk-ant') ? ' ok' : '');
+}
+
+function setDotBusy(busy) {
+  const d = document.getElementById('apiDot');
+  if (busy) d.className = 'api-dot busy';
+  else setDot(apiKey);
+}
+
+function goTo(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function copyEl(id) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent);
+  toast('In Zwischenablage kopiert');
+}
+
+// ── API ──
+async function call(messages, system, maxTokens = 1200) {
+  if (!apiKey) { toast('Bitte API-Key eingeben'); throw new Error('no key'); }
+  setDotBusy(true);
+  const body = { model: 'claude-sonnet-4-20250514', max_tokens: maxTokens, messages };
+  if (system) body.system = system;
+  const r = await fetch('/api/proxy', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+    },
+    body: JSON.stringify(body)
+  });
+  setDotBusy(false);
+  const d = await r.json();
+  return d.content?.[0]?.text || '';
+}
+
+// ══ MODULE 1: PLAN ══
+async function generatePlan() {
+  const btn = document.getElementById('planBtn');
+  btn.disabled = true; btn.textContent = 'Erstellt Plan…';
+
+  const type     = document.getElementById('p-type').value;
+  const model    = document.getElementById('p-model').value;
+  const size     = document.getElementById('p-size').value;
+  const duration = document.getElementById('p-duration').value;
+  const resist   = document.getElementById('p-resist').value;
+  const ctx      = document.getElementById('p-context').value;
+
+  const prompt = `Erstelle einen professionellen Change-Kommunikationsplan auf Deutsch.
+
+Projekt:
+- Veränderung: ${type}
+- Modell: ${model}
+- Unternehmen: ${size}
+- Zeitraum: ${duration}
+- Widerstand: ${resist}
+${ctx ? `- Kontext: ${ctx}` : ''}
+
+Erstelle genau 5 Phasen. Jede Phase exakt in diesem Format:
+
+PHASE [N]: [Titel]
+ZEITRAUM: [z.B. Woche 1–4]
+ZIELE: [2–3 Kommunikationsziele als Stichpunkte mit •]
+MASSNAHMEN: [3–4 konkrete Maßnahmen als Stichpunkte mit •]
+KANÄLE: [Empfohlene Kanäle]
+KERNBOTSCHAFT: [Die eine zentrale Botschaft dieser Phase in einem Satz]
+---`;
+
+  try {
+    const result = await call([{ role: 'user', content: prompt }], null, 1800);
+    allPlanText = result;
+    renderPlan(result, type, model);
+  } catch(e) { toast('Fehler: ' + e.message); }
+
+  btn.disabled = false; btn.textContent = 'Plan erstellen';
+}
+
+function renderPlan(text, type, model) {
+  const out = document.getElementById('planOut');
+  const wrap = document.getElementById('phasesWrap');
+  document.getElementById('planBadge').textContent = type + ' · ' + model;
+  wrap.innerHTML = '';
+
+  text.split('---').filter(s => s.trim()).forEach((block, i) => {
+    const lines = block.trim().split('\n').filter(l => l.trim());
+    const title = (lines[0] || '').replace(/^PHASE \d+:\s*/i, '').trim();
+    const body  = lines.slice(1).join('\n').trim();
+
+    const el = document.createElement('div');
+    el.className = 'phase-item';
+    el.innerHTML = `
+      <div class="phase-head" onclick="togglePhase(this)">
+        <div class="phase-num">${i + 1}</div>
+        <div class="phase-name">${title || 'Phase ' + (i+1)}</div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">${body}</div>`;
+    wrap.appendChild(el);
+  });
+
+  out.style.display = 'block';
+}
+
+function togglePhase(head) {
+  head.closest('.phase-item').classList.toggle('open');
+}
+
+function copyAllPlan() {
+  if (!allPlanText) { toast('Noch kein Plan generiert'); return; }
+  navigator.clipboard.writeText(allPlanText);
+  toast('Gesamtplan kopiert');
+}
+
+// ══ MODULE 2: TEXT ══
+async function generateText() {
+  const btn = document.getElementById('textBtn');
+  const varBtn = document.getElementById('varBtn');
+  btn.disabled = true; varBtn.disabled = true;
+  btn.textContent = 'Generiert…';
+
+  const type    = document.getElementById('t-type').value;
+  const phase   = document.getElementById('t-phase').value;
+  const format  = document.getElementById('t-format').value;
+  const aud     = document.getElementById('t-audience').value;
+  const tone    = document.getElementById('t-tone').value;
+  const lang    = document.getElementById('t-lang').value;
+  const length  = document.getElementById('t-length').value;
+  const ctx     = document.getElementById('t-context').value;
+
+  const out = document.getElementById('textOut');
+  const body = document.getElementById('textBody');
+  const tb = document.getElementById('theoryBar');
+
+  out.style.display = 'block';
+  document.getElementById('variantsOut').style.display = 'none';
+  body.className = 'output-body loading';
+  body.innerHTML = 'Text wird generiert<span class="dots"></span>';
+  tb.style.display = 'none';
+
+  const prompt = `Du bist ein erfahrener Change-Management-Kommunikationsexperte. Erstelle ${format} auf ${lang}, ${length}.
+
+Parameter:
+- Veränderung: ${type}
+- Phase: ${phase}
+- Zielgruppe: ${aud}
+- Ton: ${tone}
+${ctx ? `- Kontext: ${ctx}` : ''}
+
+Nur den fertigen Text, ohne Erklärung.`;
+
+  try {
+    const txt = await call([{ role: 'user', content: prompt }]);
+    body.className = 'output-body';
+    body.textContent = txt;
+    addHistory(type, format, txt);
+
+    const tPrompt = `Erkläre in 3 prägnanten Sätzen auf Deutsch, welche Change-Management-Prinzipien und Theorien (Kotter, Lewin, ADKAR etc.) in diesem Text erkennbar sind und warum dieser Ansatz für die Phase "${phase}" geeignet ist. Nenne konkrete Modellnamen.
+
+Text: "${txt.substring(0, 280)}..."`;
+
+    const theory = await call([{ role: 'user', content: tPrompt }], null, 400);
+    document.getElementById('theoryText').textContent = theory;
+    tb.style.display = 'block';
+  } catch(e) {
+    body.className = 'output-body';
+    body.textContent = 'Fehler: ' + e.message;
+  }
+
+  btn.disabled = false; varBtn.disabled = false;
+  btn.textContent = 'Text generieren';
+}
+
+async function generateVariants() {
+  const btn = document.getElementById('varBtn');
+  const textBtn = document.getElementById('textBtn');
+  btn.disabled = true; textBtn.disabled = true;
+  btn.textContent = 'Generiert…';
+
+  const type   = document.getElementById('t-type').value;
+  const phase  = document.getElementById('t-phase').value;
+  const format = document.getElementById('t-format').value;
+  const aud    = document.getElementById('t-audience').value;
+  const lang   = document.getElementById('t-lang').value;
+  const ctx    = document.getElementById('t-context').value;
+
+  document.getElementById('textOut').style.display = 'none';
+  const varOut = document.getElementById('variantsOut');
+  const wrap = document.getElementById('variantsWrap');
+  varOut.style.display = 'block';
+  wrap.innerHTML = `<div class="output-card"><div class="output-body loading">3 Varianten werden generiert<span class="dots"></span></div></div>`;
+
+  const prompt = `Erstelle 3 klar unterschiedliche Varianten einer ${format} auf ${lang} für:
+- Veränderung: ${type}
+- Phase: ${phase}
+- Zielgruppe: ${aud}
+${ctx ? `- Kontext: ${ctx}` : ''}
+
+Exaktes Format:
+VARIANTE 1: [Stil-Label, z.B. "Empathisch & menschlich"]
+[vollständiger Text]
+===
+VARIANTE 2: [Stil-Label]
+[vollständiger Text]
+===
+VARIANTE 3: [Stil-Label]
+[vollständiger Text]`;
+
+  try {
+    const result = await call([{ role: 'user', content: prompt }], null, 2000);
+    wrap.innerHTML = '';
+    result.split('===').filter(v => v.trim()).forEach((v, i) => {
+      const lines = v.trim().split('\n');
+      const label = lines[0].replace(/^VARIANTE \d+:\s*/i, '').trim();
+      const text  = lines.slice(1).join('\n').trim();
+      const card = document.createElement('div');
+      card.className = 'variant-card';
+      card.innerHTML = `
+        <div class="variant-head">
+          <span class="badge badge-teal">Variante ${i+1}: ${label}</span>
+          <button class="btn-ghost" data-text="${text.replace(/"/g,'&quot;')}" onclick="copyVariant(this)">Kopieren</button>
+        </div>
+        <div class="variant-body">${text}</div>`;
+      wrap.appendChild(card);
+    });
+  } catch(e) {
+    wrap.innerHTML = `<div class="output-card"><div class="output-body">Fehler: ${e.message}</div></div>`;
+  }
+
+  btn.disabled = false; textBtn.disabled = false;
+  btn.textContent = '3 Varianten';
+}
+
+function copyVariant(btn) {
+  navigator.clipboard.writeText(btn.dataset.text);
+  toast('Kopiert');
+}
+
+function addHistory(type, format, text) {
+  textHistoryArr.unshift({ label: type + ' · ' + format, text });
+  if (textHistoryArr.length > 6) textHistoryArr.pop();
+  const bar = document.getElementById('txtHistoryBar');
+  const wrap = document.getElementById('txtHistoryWrap');
+  bar.innerHTML = textHistoryArr.map((h, i) =>
+    `<button class="chip" onclick="loadTxtHistory(${i})">${h.label}</button>`
+  ).join('');
+  wrap.style.display = 'block';
+}
+
+function loadTxtHistory(i) {
+  const h = textHistoryArr[i];
+  document.getElementById('textOut').style.display = 'block';
+  const body = document.getElementById('textBody');
+  body.className = 'output-body';
+  body.textContent = h.text;
+}
+
+function saveTxtHistory() {
+  const text = document.getElementById('textBody').textContent;
+  navigator.clipboard.writeText(text);
+  toast('Text kopiert');
+}
+
+// ══ MODULE 3: ANALYSE ══
+async function analyseText() {
+  const text = document.getElementById('a-text').value.trim();
+  if (!text) { toast('Bitte Text eingeben'); return; }
+
+  const btn = document.getElementById('analyseBtn');
+  btn.disabled = true; btn.textContent = 'Analysiert…';
+
+  const ctx   = document.getElementById('a-context').value;
+  const focus = document.getElementById('a-focus').value;
+
+  const out = document.getElementById('analyseOut');
+  const body = document.getElementById('analyseBody');
+  out.style.display = 'block';
+  body.className = 'output-body loading';
+  body.innerHTML = 'Analyse wird erstellt<span class="dots"></span>';
+  document.getElementById('scoresRow').innerHTML = '';
+
+  const prompt = `Analysiere diesen Change-Kommunikationstext auf Deutsch. Fokus: ${focus}.
+${ctx ? `Kontext: ${ctx}` : ''}
+
+Text: "${text}"
+
+Antworte in diesem Format:
+SCORES:
+Klarheit: [1-10]
+Empathie: [1-10]
+Überzeugungskraft: [1-10]
+Theoriebezug: [1-10]
+
+STÄRKEN:
+[3 konkrete Stärken]
+
+SCHWÄCHEN:
+[2-3 konkrete Schwächen]
+
+EMPFEHLUNGEN:
+[3-4 Verbesserungsvorschläge]
+
+FAZIT:
+[2-3 Sätze Gesamtbewertung]`;
+
+  try {
+    const res = await call([{ role: 'user', content: prompt }]);
+    const m = res.match(/Klarheit:\s*(\d+)[\s\S]*?Empathie:\s*(\d+)[\s\S]*?Überzeugungskraft:\s*(\d+)[\s\S]*?Theoriebezug:\s*(\d+)/);
+    if (m) {
+      const labels = ['Klarheit', 'Empathie', 'Überzeugung', 'Theorie'];
+      const colors = ['#0F766E', '#B45309', '#7C3AED', '#DC2626'];
+      document.getElementById('scoresRow').innerHTML = [m[1],m[2],m[3],m[4]].map((s,i) => `
+        <div class="score-tile">
+          <div class="score-num" style="color:${colors[i]}">${s}</div>
+          <div class="score-lbl">${labels[i]}</div>
+        </div>`).join('');
+    }
+    body.className = 'output-body';
+    body.textContent = res.replace(/SCORES:[\s\S]*?Theoriebezug:\s*\d+\s*/,'').trim();
+  } catch(e) {
+    body.className = 'output-body';
+    body.textContent = 'Fehler: ' + e.message;
+  }
+
+  btn.disabled = false; btn.textContent = 'Analysieren';
+}
+
+async function improveText() {
+  const text = document.getElementById('a-text').value.trim();
+  if (!text) { toast('Bitte Text eingeben'); return; }
+
+  const btn = document.getElementById('improveBtn');
+  btn.disabled = true; btn.textContent = 'Verbessert…';
+  const ctx = document.getElementById('a-context').value;
+
+  const out = document.getElementById('improveOut');
+  const body = document.getElementById('improveBody');
+  out.style.display = 'block';
+  body.className = 'output-body loading';
+  body.innerHTML = 'Text wird verbessert<span class="dots"></span>';
+
+  const prompt = `Verbessere diesen Change-Kommunikationstext auf Deutsch. Behalte Kernbotschaft und Struktur bei, optimiere jedoch Empathie, Klarheit und Wirkung nach Change-Management-Prinzipien.
+${ctx ? `Kontext: ${ctx}` : ''}
+
+Original: "${text}"
+
+Nur den verbesserten Text, ohne Kommentar.`;
+
+  try {
+    const improved = await call([{ role: 'user', content: prompt }]);
+    body.className = 'output-body';
+    body.textContent = improved;
+  } catch(e) {
+    body.className = 'output-body';
+    body.textContent = 'Fehler: ' + e.message;
+  }
+
+  btn.disabled = false; btn.textContent = 'Text verbessern';
+}
+
+// ══ MODULE 4: CHAT ══
+const SYSTEM = `Du bist ein erfahrener Change-Management-Berater mit Expertise in Kotter, Lewin, ADKAR, McKinsey 7-S und Kübler-Ross. Du antwortest auf Deutsch, bist präzise und praxisorientiert, nennst bei Bedarf relevante Theorien und gibst konkrete Handlungsempfehlungen. Antworte in 150–250 Wörtern, strukturiert aber nicht übermäßig formal.`;
+
+async function sendChat() {
+  const inp = document.getElementById('chatIn');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = ''; inp.style.height = 'auto';
+  document.getElementById('chatSugs').style.display = 'none';
+
+  appendMsg('user', msg);
+  chatHistory.push({ role: 'user', content: msg });
+  document.getElementById('chatSendBtn').disabled = true;
+
+  const el = appendMsg('ai', '');
+  el.querySelector('.msg-bub').innerHTML = '<span class="dots"></span>';
+
+  try {
+    const reply = await call(chatHistory, SYSTEM);
+    el.querySelector('.msg-bub').textContent = reply;
+    chatHistory.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    el.querySelector('.msg-bub').textContent = 'Fehler: ' + e.message;
+  }
+
+  document.getElementById('chatSendBtn').disabled = false;
+  const c = document.getElementById('chatMsgs');
+  c.scrollTop = c.scrollHeight;
+}
+
+function appendMsg(role, text) {
+  const c = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  d.className = `msg ${role}`;
+  d.innerHTML = `<div class="msg-av">${role==='user'?'Du':'CC'}</div><div class="msg-bub">${text}</div>`;
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+  return d;
+}
+
+function chatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  const ta = document.getElementById('chatIn');
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 150) + 'px';
+}
+
+function useSug(btn) {
+  document.getElementById('chatIn').value = btn.textContent;
+  sendChat();
+}
+</script>
+</body>
+</html>
